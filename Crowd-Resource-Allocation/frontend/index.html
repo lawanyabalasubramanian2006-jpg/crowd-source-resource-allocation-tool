@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Crowd Resource Allocation</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #333;
+        }
+
+        nav {
+            background: #1d4f91;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        nav a,
+        nav button {
+            color: white;
+            text-decoration: none;
+            margin-left: 15px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 900px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            color: #1d4f91;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        button.submit {
+            margin-top: 20px;
+            padding: 12px 25px;
+            background: #1d4f91;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button.submit:hover {
+            background: #153d70;
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .links {
+            margin-top: 20px;
+        }
+
+        .links a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 10px 15px;
+            background: #1d4f91;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        #welcome {
+            color: #1d4f91;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<nav>
+
+    <h2>Crowd Resource Allocation</h2>
+
+    <div>
+
+        <a href="index.html">Home</a>
+
+        <a href="voting.html">Voting</a>
+
+        <a href="ranking.html">Ranking</a>
+
+        <button onclick="logout()">
+            Logout
+        </button>
+
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+    <h1>
+        Community Resource Request
+    </h1>
+
+    <p id="welcome">
+        Checking login...
+    </p>
+
+
+    <div class="card">
+
+        <form id="requestForm">
+
+
+            <label for="resource">
+                Resource
+            </label>
+
+            <select
+                id="resource"
+                required
+            >
+
+                <option value="">
+                    Select Resource
+                </option>
+
+                <option value="1">
+                    Laptop
+                </option>
+
+                <option value="2">
+                    Tablet
+                </option>
+
+                <option value="3">
+                    Desktop Computer
+                </option>
+
+            </select>
+
+
+            <label for="description">
+                Description
+            </label>
+
+            <textarea
+                id="description"
+                placeholder="Explain why the resource is needed"
+                required
+            ></textarea>
+
+
+            <label for="need">
+                Need Level
+            </label>
+
+            <select
+                id="need"
+                required
+            >
+
+                <option value="">
+                    Select Need Level
+                </option>
+
+                <option value="Low">
+                    Low
+                </option>
+
+                <option value="Medium">
+                    Medium
+                </option>
+
+                <option value="High">
+                    High
+                </option>
+
+            </select>
+
+
+            <label for="urgency">
+                Urgency Level
+            </label>
+
+            <select
+                id="urgency"
+                required
+            >
+
+                <option value="">
+                    Select Urgency
+                </option>
+
+                <option value="Low">
+                    Within a Month
+                </option>
+
+                <option value="Medium">
+                    Within a Week
+                </option>
+
+                <option value="High">
+                    Within 1-2 days
+                </option>
+
+            </select>
+
+
+            <button
+                class="submit"
+                type="submit"
+            >
+                Submit Request
+            </button>
+
+
+        </form>
+
+
+        <div id="message"></div>
+
+    </div>
+
+
+    <div class="card">
+
+        <h2>Quick Navigation</h2>
+
+        <div class="links">
+
+            <a href="voting.html">
+                Vote on Requests
+            </a>
+
+            <a href="ranking.html">
+                View Ranking
+            </a>
+
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+// ==================================================
+// CHECK PHP SESSION
+// ==================================================
+
+fetch("../backend/check_session.php")
+
+.then(response => response.json())
+
+.then(data => {
+
+
+    if (!data.logged_in) {
+
+        window.location.href =
+            "login.html";
+
+        return;
+    }
+
+
+    document.getElementById("welcome").innerHTML =
+        "Welcome, " +
+        data.user.name +
+        "!";
+
+
+})
+
+.catch(error => {
+
+    console.error(error);
+
+    document.getElementById("welcome").innerHTML =
+        "Unable to verify login.";
+
+});
+
+
+
+// ==================================================
+// SUBMIT REQUEST
+// ==================================================
+
+document
+.getElementById("requestForm")
+.addEventListener(
+    "submit",
+    function(event) {
+
+
+        event.preventDefault();
+
+
+        const message =
+            document.getElementById("message");
+
+
+        const data =
+            new FormData();
+
+
+        data.append(
+            "resource_id",
+            document.getElementById("resource").value
+        );
+
+
+        data.append(
+            "description",
+            document.getElementById("description").value
+        );
+
+
+        data.append(
+            "need",
+            document.getElementById("need").value
+        );
+
+
+        data.append(
+            "urgency",
+            document.getElementById("urgency").value
+        );
+
+
+        message.innerHTML =
+            "Submitting request...";
+
+
+        message.style.color =
+            "blue";
+
+
+        fetch(
+            "../backend/submit_request.php",
+            {
+                method: "POST",
+                body: data
+            }
+        )
+
+
+        .then(response =>
+            response.json()
+        )
+
+
+        .then(result => {
+
+
+            if (result.success) {
+
+
+                message.innerHTML =
+                    "Request submitted successfully! " +
+                    "Request ID: " +
+                    result.request_id;
+
+
+                message.style.color =
+                    "green";
+
+
+                document
+                .getElementById("requestForm")
+                .reset();
+
+
+            }
+
+            else {
+
+
+                message.innerHTML =
+                    result.message ||
+                    "Failed to submit request.";
+
+
+                message.style.color =
+                    "red";
+
+            }
+
+
+        })
+
+
+        .catch(error => {
+
+
+            console.error(error);
+
+
+            message.innerHTML =
+                "Server connection failed.";
+
+
+            message.style.color =
+                "red";
+
+        });
+
+
+    }
+);
+
+
+
+// ==================================================
+// LOGOUT
+// ==================================================
+
+function logout() {
+
+
+    fetch(
+        "../backend/logout.php",
+        {
+            method: "POST"
+        }
+    )
+
+
+    .then(response =>
+        response.json()
+    )
+
+
+    .then(data => {
+
+        window.location.href =
+            "login.html";
+
+    })
+
+
+    .catch(error => {
+
+        console.error(error);
+
+        window.location.href =
+            "login.html";
+
+    });
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

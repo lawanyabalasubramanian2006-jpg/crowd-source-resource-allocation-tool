@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Community Voting</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #333;
+        }
+
+        nav {
+            background: #1d4f91;
+            padding: 18px 30px;
+        }
+
+        nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        nav div {
+            margin-top: 12px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 25px;
+            font-size: 16px;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            color: #1d4f91;
+        }
+
+        .member-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 25px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .member-box label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .member-box input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .request-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        .request-card h2 {
+            color: #1d4f91;
+            margin-top: 0;
+        }
+
+        .info {
+            margin: 12px 0;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .vote-button {
+            background: #1d4f91;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 15px;
+        }
+
+        .vote-button:hover {
+            background: #153d70;
+        }
+
+        .vote-button:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+
+        .message {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 18px;
+            margin: 30px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<nav>
+
+    <h2>Crowd Resource Allocation</h2>
+
+    <div>
+
+        <a href="index.html">Home</a>
+
+        <a href="voting.html">Voting</a>
+
+        <a href="ranking.html">Ranking</a>
+
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+    <h1>Community Voting</h1>
+
+    <p>
+        Select your Member ID and vote for a request.
+    </p>
+
+
+    <!-- MEMBER ID -->
+
+    <div class="member-box">
+
+        <label for="memberId">
+            Member ID
+        </label>
+
+        <input
+            type="number"
+            id="memberId"
+            min="1"
+            max="100"
+            placeholder="Enter Member ID (1-100)"
+        >
+
+    </div>
+
+
+    <div id="loading">
+        Loading requests...
+    </div>
+
+
+    <div id="requests"></div>
+
+
+</div>
+
+
+<script>
+
+
+/* ================================
+   LOAD REQUESTS
+================================ */
+
+function loadRequests() {
+
+    fetch("../backend/get_requests.php")
+
+    .then(response => {
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP Error: " + response.status
+            );
+
+        }
+
+        return response.json();
+
+    })
+
+    .then(data => {
+
+        document.getElementById("loading").style.display = "none";
+
+        const container =
+            document.getElementById("requests");
+
+        container.innerHTML = "";
+
+
+        if (!data.success) {
+
+            container.innerHTML =
+                `<p class="error">
+                    ${data.message || "Unable to load requests."}
+                </p>`;
+
+            return;
+
+        }
+
+
+        if (!data.requests || data.requests.length === 0) {
+
+            container.innerHTML =
+                "<p>No requests available.</p>";
+
+            return;
+
+        }
+
+
+        data.requests.forEach(request => {
+
+            const card =
+                document.createElement("div");
+
+            card.className = "request-card";
+
+
+            card.innerHTML = `
+
+                <h2>
+                    Request #${request.id}
+                </h2>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Resource:
+                    </span>
+
+                    ${request.resource_name}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Description:
+                    </span>
+
+                    ${request.description}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Need:
+                    </span>
+
+                    ${request.need}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Urgency:
+                    </span>
+
+                    ${request.urgency}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Community Votes:
+                    </span>
+
+                    <span id="votes-${request.id}">
+                        ${request.vote_count || 0}
+                    </span>
+
+                </div>
+
+
+                <button
+                    class="vote-button"
+                    onclick="vote(${request.id}, this)"
+                >
+                    Vote for this Request
+                </button>
+
+
+                <div class="message"></div>
+
+            `;
+
+
+            container.appendChild(card);
+
+        });
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        document.getElementById("loading").innerHTML =
+            `<span class="error">
+                Server connection failed: ${error.message}
+            </span>`;
+
+    });
+
+}
+
+
+
+/* ================================
+   VOTE
+================================ */
+
+function vote(requestId, button) {
+
+    const memberId =
+        document.getElementById("memberId").value.trim();
+
+
+    /* CHECK MEMBER ID */
+
+    if (
+        memberId === "" ||
+        Number(memberId) < 1 ||
+        Number(memberId) > 100
+    ) {
+
+        alert(
+            "Please enter a valid Member ID from 1 to 100."
+        );
+
+        return;
+
+    }
+
+
+    const message =
+        button.nextElementSibling;
+
+
+    button.disabled = true;
+
+
+    message.innerHTML =
+        "Submitting vote...";
+
+    message.style.color = "blue";
+
+
+    /* SEND DATA */
+
+    const formData =
+        new URLSearchParams();
+
+
+    formData.append(
+        "user_id",
+        memberId
+    );
+
+
+    formData.append(
+        "request_id",
+        requestId
+    );
+
+
+    fetch("../backend/vote.php", {
+
+        method: "POST",
+
+        headers: {
+
+            "Content-Type":
+                "application/x-www-form-urlencoded"
+
+        },
+
+        body: formData.toString()
+
+    })
+
+
+    .then(response => {
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP Error: " + response.status
+            );
+
+        }
+
+        return response.json();
+
+    })
+
+
+    .then(data => {
+
+        console.log("Vote response:", data);
+
+
+        if (data.success) {
+
+            message.innerHTML =
+                "Vote submitted successfully!";
+
+            message.style.color =
+                "green";
+
+
+            /* UPDATE VOTE COUNT */
+
+            const voteCount =
+                document.getElementById(
+                    "votes-" + requestId
+                );
+
+
+            voteCount.innerText =
+                Number(voteCount.innerText) + 1;
+
+
+            button.innerText =
+                "Vote Submitted";
+
+        }
+
+
+        else {
+
+            message.innerHTML =
+                data.message ||
+                "Vote failed.";
+
+            message.style.color =
+                "red";
+
+
+            button.disabled =
+                false;
+
+        }
+
+    })
+
+
+    .catch(error => {
+
+        console.error(error);
+
+        message.innerHTML =
+            "Server connection failed: " +
+            error.message;
+
+        message.style.color =
+            "red";
+
+
+        button.disabled =
+            false;
+
+    });
+
+}
+
+
+/* START */
+
+loadRequests();
+
+
+</script>
+
+
+</body>
+
+</html>

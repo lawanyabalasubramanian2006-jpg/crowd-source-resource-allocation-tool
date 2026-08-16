@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Resource Priority Ranking</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #333;
+        }
+
+        nav {
+            background: #1d4f91;
+            padding: 15px 30px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h2 {
+            color: white;
+            margin: 0;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        h1 {
+            color: #1d4f91;
+        }
+
+        .formula {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .formula strong {
+            color: #1d4f91;
+        }
+
+        .refresh-button {
+            background: #1d4f91;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 25px;
+        }
+
+        .refresh-button:hover {
+            background: #153d70;
+        }
+
+        .ranking-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+        }
+
+        .rank {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1d4f91;
+        }
+
+        .request-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #1d4f91;
+            margin: 10px 0;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .info {
+            margin: 8px 0;
+        }
+
+        .label {
+            font-weight: bold;
+        }
+
+        .explanation {
+            background: #f4f7fb;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 7px;
+        }
+
+        #loading {
+            text-align: center;
+            font-size: 18px;
+            margin: 30px;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<nav>
+
+    <h2>Crowd Resource Allocation</h2>
+
+    <div>
+
+        <a href="index.html">
+            Home
+        </a>
+
+        <a href="voting.html">
+            Voting
+        </a>
+
+        <a href="ranking.html">
+            Ranking
+        </a>
+
+    </div>
+
+</nav>
+
+
+<div class="container">
+
+    <h1>
+        Resource Priority Ranking
+    </h1>
+
+
+    <p>
+        Requests are ranked according to need,
+        urgency, community votes and waiting time.
+    </p>
+
+
+    <div class="formula">
+
+        <strong>Ranking Formula</strong>
+
+        <br><br>
+
+        Need = <strong>40%</strong>
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        Urgency = <strong>30%</strong>
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        Community Votes = <strong>20%</strong>
+
+        &nbsp;&nbsp; | &nbsp;&nbsp;
+
+        Waiting Time = <strong>10%</strong>
+
+    </div>
+
+
+    <button
+        class="refresh-button"
+        onclick="loadRanking()"
+    >
+        Refresh Ranking
+    </button>
+
+
+    <div id="loading">
+        Loading ranking...
+    </div>
+
+
+    <div id="ranking"></div>
+
+
+</div>
+
+
+<script>
+
+
+function loadRanking() {
+
+
+    document.getElementById("loading")
+        .style.display = "block";
+
+
+    document.getElementById("ranking")
+        .innerHTML = "";
+
+
+    fetch("../backend/ranking.php")
+
+
+    .then(response => {
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "HTTP Error: " + response.status
+            );
+
+        }
+
+
+        return response.json();
+
+
+    })
+
+
+    .then(data => {
+
+
+        document.getElementById("loading")
+            .style.display = "none";
+
+
+        const container =
+            document.getElementById("ranking");
+
+
+        if (!data.success) {
+
+
+            container.innerHTML = `
+
+                <p class="error">
+
+                    ${data.message}
+
+                </p>
+
+            `;
+
+
+            return;
+
+        }
+
+
+        if (
+            !data.ranking ||
+            data.ranking.length === 0
+        ) {
+
+
+            container.innerHTML = `
+
+                <p>
+                    No pending requests available
+                    for ranking.
+                </p>
+
+            `;
+
+
+            return;
+
+        }
+
+
+        data.ranking.forEach(item => {
+
+
+            const card =
+                document.createElement("div");
+
+
+            card.className =
+                "ranking-card";
+
+
+            card.innerHTML = `
+
+                <div class="rank">
+
+                    Rank #${item.rank}
+
+                </div>
+
+
+                <div class="request-title">
+
+                    Request #${item.id}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Resource:
+                    </span>
+
+                    ${item.resource}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Description:
+                    </span>
+
+                    ${item.description}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Need:
+                    </span>
+
+                    ${item.need_score}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Urgency:
+                    </span>
+
+                    ${item.urgency_score}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Community Votes:
+                    </span>
+
+                    ${item.vote_count}
+
+                </div>
+
+
+                <div class="info">
+
+                    <span class="label">
+                        Waiting Time:
+                    </span>
+
+                    ${item.waiting_days}
+                    day(s)
+
+                </div>
+
+
+                <div class="score">
+
+                    Final Score:
+                    ${item.final_score}
+
+                </div>
+
+
+                <div class="explanation">
+
+                    <strong>
+                        Score Explanation
+                    </strong>
+
+                    <br><br>
+
+                    Need contribution:
+                    ${(
+                        item.need_score * 0.40
+                    ).toFixed(2)}
+
+                    <br>
+
+                    Urgency contribution:
+                    ${(
+                        item.urgency_score * 0.30
+                    ).toFixed(2)}
+
+                    <br>
+
+                    Community vote contribution:
+                    ${(
+                        item.vote_score * 0.20
+                    ).toFixed(2)}
+
+                    <br>
+
+                    Waiting time contribution:
+                    ${(
+                        item.waiting_score * 0.10
+                    ).toFixed(2)}
+
+                    <br><br>
+
+                    <strong>
+                        Final Score =
+                        ${item.final_score}
+                    </strong>
+
+                </div>
+
+            `;
+
+
+            container.appendChild(card);
+
+
+        });
+
+
+    })
+
+
+    .catch(error => {
+
+
+        console.error(error);
+
+
+        document.getElementById("loading")
+            .style.display = "none";
+
+
+        document.getElementById("ranking")
+            .innerHTML = `
+
+                <p class="error">
+
+                    Server connection failed.
+
+                    <br><br>
+
+                    ${error.message}
+
+                </p>
+
+            `;
+
+
+    });
+
+}
+
+
+/* Load when page opens */
+
+loadRanking();
+
+
+</script>
+
+
+</body>
+
+</html>
