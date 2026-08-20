@@ -1,0 +1,308 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Member authentication
+  - name: requests
+    description: Community resource requests
+  - name: votes
+    description: Community voting
+  - name: ranking
+    description: Weighted allocation rankings
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerMember
+      tags: [auth]
+      summary: Register a community member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Registration failed
+  /auth/login:
+    post:
+      operationId: loginMember
+      tags: [auth]
+      summary: Log in a community member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+  /auth/me:
+    get:
+      operationId: getCurrentMember
+      tags: [auth]
+      summary: Get the current member
+      responses:
+        "200":
+          description: Current member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "401":
+          description: Not authenticated
+  /requests:
+    get:
+      operationId: getRequests
+      tags: [requests]
+      summary: List resource requests
+      responses:
+        "200":
+          description: Resource requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ResourceRequest"
+    post:
+      operationId: createRequest
+      tags: [requests]
+      summary: Submit a resource request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestInput"
+      responses:
+        "201":
+          description: Created resource request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResourceRequest"
+        "401":
+          description: Not authenticated
+  /ranking:
+    get:
+      operationId: getRanking
+      tags: [ranking]
+      summary: Get weighted ranked requests
+      responses:
+        "200":
+          description: Ranked resource requests with score explanations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RankedRequest"
+  /votes:
+    post:
+      operationId: castVote
+      tags: [votes]
+      summary: Cast the member's one vote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VoteInput"
+      responses:
+        "201":
+          description: Vote recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteStatus"
+        "400":
+          description: Member has already voted
+        "401":
+          description: Not authenticated
+  /votes/mine:
+    get:
+      operationId: getMyVote
+      tags: [votes]
+      summary: Get the current member's vote status
+      responses:
+        "200":
+          description: Vote status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VoteStatus"
+        "401":
+          description: Not authenticated
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Member:
+      type: object
+      properties:
+        id:
+          type: number
+        username:
+          type: string
+        email:
+          type: string
+        createdAt:
+          type: string
+      required: [id, username, email, createdAt]
+    RegisterInput:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 2
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+      required: [username, email, password]
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+    AuthResponse:
+      type: object
+      properties:
+        member:
+          $ref: "#/components/schemas/Member"
+        token:
+          type: string
+      required: [member, token]
+    RequestInput:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 3
+        description:
+          type: string
+          minLength: 10
+        category:
+          type: string
+        need:
+          type: number
+          minimum: 1
+          maximum: 5
+        urgency:
+          type: number
+          minimum: 1
+          maximum: 5
+        quantityNeeded:
+          type: number
+          minimum: 1
+      required: [title, description, category, need, urgency, quantityNeeded]
+    ResourceRequest:
+      type: object
+      properties:
+        id:
+          type: number
+        title:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        need:
+          type: number
+        urgency:
+          type: number
+        quantityNeeded:
+          type: number
+        votes:
+          type: number
+        createdAt:
+          type: string
+        submittedBy:
+          type: string
+      required: [id, title, description, category, need, urgency, quantityNeeded, votes, createdAt, submittedBy]
+    ScoreFactor:
+      type: object
+      properties:
+        label:
+          type: string
+        value:
+          type: number
+        contribution:
+          type: number
+        detail:
+          type: string
+      required: [label, value, contribution, detail]
+    RankedRequest:
+      allOf:
+        - $ref: "#/components/schemas/ResourceRequest"
+        - type: object
+          properties:
+            rank:
+              type: number
+            score:
+              type: number
+            factors:
+              type: array
+              items:
+                $ref: "#/components/schemas/ScoreFactor"
+          required: [rank, score, factors]
+    VoteInput:
+      type: object
+      properties:
+        requestId:
+          type: number
+      required: [requestId]
+    VoteStatus:
+      type: object
+      properties:
+        hasVoted:
+          type: boolean
+        requestId:
+          type: ["number", "null"]
+      required: [hasVoted, requestId]
+

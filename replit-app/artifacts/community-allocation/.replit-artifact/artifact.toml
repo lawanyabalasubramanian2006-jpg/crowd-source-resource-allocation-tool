@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Community Resource Allocation"
+description = "A transparent community tool for submitting resource requests, voting once per member, and exploring a weighted ranked allocation list with plain-English score explanations."
+version = "1.0.0"
+id = "artifacts/community-allocation"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 20155
+
+[services.development]
+run = "pnpm --filter @workspace/community-allocation run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/community-allocation", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/community-allocation/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "20155"
+BASE_PATH = "/"

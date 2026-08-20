@@ -1,0 +1,1 @@
+- [Allocation API compatibility](allocation-api-contract.md) — OpenAPI numeric/email formats must match the workspace's installed Zod generation target.
